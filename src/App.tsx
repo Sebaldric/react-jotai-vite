@@ -4,18 +4,19 @@ import { Note } from "./domain/note";
 import { notesAtom } from "./store";
 import SideMenu from "./components/SideMenu";
 import Editor from "./components/Editor";
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
 
 function App() {
   const setNotes = useSetAtom(notesAtom);
+  const initializeNotes = useQuery(api.notes.get);
 
   useEffect(() => {
-    const noteData = [
-      new Note("1", "Note 1", "content1", new Date().getTime()),
-      new Note("2", "Note 2", "content2", new Date().getTime()),
-      new Note("3", "Note 3", "content3", new Date().getTime()),
-    ];
-    setNotes(noteData);
-  }, []);
+    const notes = initializeNotes?.map(
+      (note) => new Note(note._id, note.title, note.content, note.lastEditTime)
+    );
+    setNotes(notes || []);
+  }, [initializeNotes, setNotes]);
 
   return (
     <div className="flex h-screen w-full bg-white">
