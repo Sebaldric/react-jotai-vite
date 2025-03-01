@@ -1,7 +1,9 @@
-import React from "react";
+import { useAtomValue } from "jotai";
+import { selectedNoteAtom } from "../store";
 
 function Editor() {
-  return <div>Editor</div>;
+  const selectedNote = useAtomValue(selectedNoteAtom);
+  return <div>{selectedNote?.content || ""}</div>;
 }
 
 export default Editor;
