@@ -1,5 +1,5 @@
-import { useAtomValue } from "jotai";
-import { selectedNoteAtom } from "../store";
+import { useAtomValue, useSetAtom } from "jotai";
+import { savedNotesAtom, selectedNoteAtom } from "../store";
 import {
   BoldItalicUnderlineToggles,
   codeBlockPlugin,
@@ -15,7 +15,10 @@ import {
   toolbarPlugin,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
-
+import { api } from "../../convex/_generated/api";
+import { useMutation } from "convex/react";
+import { useCallback, useEffect, useState } from "react";
+import { useDebounce } from "@uidotdev/usehooks";
 const plugins = [
   headingsPlugin(),
   listsPlugin(),
@@ -61,6 +64,29 @@ const plugins = [
 
 function Editor() {
   const selectedNote = useAtomValue(selectedNoteAtom);
+  const updateNote = useMutation(api.notes.updateNote);
+  const savedNotes = useSetAtom(savedNotesAtom);
+  const [content, setContent] = useState(selectedNote?.content || "");
+
+  const debouncedContent = useDebounce(content, 1000);
+
+  useEffect(() => {
+    if (!debouncedContent || !selectedNote) return;
+    updateNote({
+      noteId: selectedNote.id,
+      title: selectedNote.title,
+      content: debouncedContent,
+    });
+  }, [debouncedContent]);
+
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      setContent(newContent);
+      savedNotes(newContent);
+    },
+    [savedNotes]
+  );
+
   return (
     <div className="flex-1">
       {selectedNote ? (
@@ -71,6 +97,7 @@ function Editor() {
           contentEditableClassName="prose max-w-none focus:outline-none"
           className="h-full"
           placeholder="Write something..."
+          onChange={handleContentChange}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center">
