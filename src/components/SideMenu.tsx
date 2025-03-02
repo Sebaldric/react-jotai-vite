@@ -4,6 +4,9 @@ import { api } from "../../convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Note } from "../domain/note";
 import { Id } from "../../convex/_generated/dataModel";
+import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
+
 function SideMenu() {
   const [notes, setNotes] = useAtom(notesAtom);
   const setSelectedNoteId = useSetAtom(selectedNoteIdAtom);
@@ -20,6 +23,11 @@ function SideMenu() {
   };
 
   const deleteNote = useMutation(api.notes.deleteNote);
+  const updateNote = useMutation(api.notes.updateNote);
+  const [editingNote, setEditingNote] = useState<{
+    id: Id<"notes">;
+    title: string;
+  } | null>(null);
 
   const handleDeleteNote = async (noteId: Id<"notes">) => {
     await deleteNote({ id: noteId });
@@ -28,6 +36,28 @@ function SideMenu() {
 
   const handleNoteClick = (noteId: Id<"notes">) => {
     setSelectedNoteId(noteId);
+  };
+
+  const debounceTitle = useDebounce(editingNote?.title, 500);
+
+  useEffect(() => {
+    if (debounceTitle && editingNote) {
+      handleUpdateTitle(editingNote.id, debounceTitle);
+    }
+  }, [debounceTitle]);
+
+  const handleTitleChange = async (noteId: Id<"notes">, title: string) => {
+    setEditingNote({ id: noteId, title });
+    setNotes((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, title } : n))
+    );
+  };
+
+  const handleUpdateTitle = async (noteId: Id<"notes">, newTitle: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (note) {
+      await updateNote({ noteId, title: newTitle, content: note.content });
+    }
   };
 
   return (
@@ -46,7 +76,12 @@ function SideMenu() {
             onClick={() => handleNoteClick(note.id)}
           >
             <div className="flex-1 min-w-0">
-              <input type="text" className="bg-gray-100" value={note.title} />
+              <input
+                type="text"
+                className="bg-gray-100"
+                onChange={(e) => handleTitleChange(note.id, e.target.value)}
+                value={note.title}
+              />
               <p>
                 {note.lastEditTime
                   ? new Date(note.lastEditTime).toLocaleString()
