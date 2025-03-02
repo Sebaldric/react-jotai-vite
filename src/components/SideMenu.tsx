@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { Note } from "../domain/note";
 import { Id } from "../../convex/_generated/dataModel";
 import { useEffect, useState } from "react";
-import { useDebounce } from "use-debounce";
+import { useDebounce } from "@uidotdev/usehooks";
 
 function SideMenu() {
   const [notes, setNotes] = useAtom(notesAtom);
