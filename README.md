@@ -1,50 +1,109 @@
-# React + TypeScript + Vite
+# ノートアプリ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## URL
 
-Currently, two official plugins are available:
+https://react-jotai-vite-8tfahaz4q-sebaldric-beachovins-projects.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 機能概要
 
-## Expanding the ESLint configuration
+convex + jotai + react + vite
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 1. ノート管理システム
 
-- Configure the top-level `parserOptions` property like this:
+#### 主要機能
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. **ノートの作成**
+
+   - 「+」ボタンで新規ノートを作成
+   - デフォルトタイトル: "Untitled"
+   - 作成時に空の内容で初期化
+
+2. **ノートの編集**
+
+   - タイトルのインライン編集
+   - 内容の編集（エディター機能）
+   - 自動保存機能（500msのデバウンス処理）
+
+3. **ノートの削除**
+
+   - 各ノートの「-」ボタンで削除
+   - 削除の即時反映
+
+4. **ノートの一覧表示**
+   - サイドメニューでの一覧表示
+   - 最終編集時間の表示
+   - タイトルと更新日時の表示
+
+### 2. 技術実装の詳細
+
+#### 状態管理
+
+- **Jotai**を使用した状態管理
+  ```typescript
+  const [notes, setNotes] = useAtom(notesAtom);
+  const setSelectedNoteId = useSetAtom(selectedNoteIdAtom);
+  ```
+
+#### データ永続化
+
+- **Convex**を使用したバックエンド連携
+  ```typescript
+  const createNote = useMutation(api.notes.create);
+  const deleteNote = useMutation(api.notes.deleteNote);
+  const updateNote = useMutation(api.notes.updateNote);
+  ```
+
+#### UI/UX機能
+
+1. **デバウンス処理**
+
+   ```typescript
+   const debounceTitle = useDebounce(editingNote?.title, 500);
+   ```
+
+   - タイトル編集時の自動保存
+   - サーバーへの過剰なリクエスト防止
+
+### 3. コンポーネント構造
+
+#### SideMenu
+
+- ノート一覧の表示と管理
+- 新規ノート作成機能
+- ノート削除機能
+- タイトル編集機能
+
+#### Editor
+
+- ノート内容の編集機能
+- リアルタイム保存
+- マークダウンプレビュー（実装予定）
+
+### 4. データモデル
+
+#### Note型
+
+```typescript
+class Note {
+  constructor(
+    public id: Id<"notes">,
+    public title: string,
+    public content: string,
+    public lastEditTime: number
+  ) {}
+}
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### 5. 今後の拡張予定機能
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+1. マークダウンサポート
+2. タグ付け機能
+3. ノート検索機能
+4. ノートの共有機能
+5. バージョン履歴管理
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+### 6. パフォーマンス最適化
+
+1. デバウンス処理による更新の最適化
+2. メモ化によるレンダリング最適化
+3. 仮想スクロールの実装（大量のノート対応）
